@@ -53,20 +53,33 @@ const Turn = (props) => {
   );
 }
 
+const ContinueButton = (props) => {
+  return (
+    <div className='col-11'>
+      <button className='btn btn-primary btn-lg float-right' onClick={props.onContinue}>
+        Continue
+      </button>
+    </div>
+  );
+}
+
 const Continue = (props) => {
   return (
-    <div>
+    <div className='row continue'>
+      {props.show ? <ContinueButton onContinue={props.onContinue} /> : null}
     </div>
   );
 }
 
 const AddAuthorLink = (props) => {
   return (
-    <p>
-      <Link to='/add'>
-        Add an author
-      </Link>
-    </p>
+    <div className='row'>
+      <div className='col-4 offset-1'>
+        <Link to='/add'>
+          Add an author
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -76,7 +89,7 @@ const AuthorQuiz = (props) => {
     <div className='container-fluid'>
       <Header />
       <Turn {...props} onClick={handleClick} />
-      <Continue />
+      <Continue show={props.answerStatus === 'correct'} onContinue={props.onContinue} />
       <AddAuthorLink />
       <Footer />
     </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter, Route } from 'react-router-dom';
+import { BrowserRouter, Route, withRouter } from 'react-router-dom';
 import './index.css';
 import AuthorQuiz from './AuthorQuiz';
 import AddAuthorForm from './AddAuthorForm';
@@ -60,9 +60,17 @@ const getTurnData = (authors) => {
     }
 }
 
+const RepeatableApp = () => {
+    const [gameId, setGameId] = useState(1);
+    return (
+        <App key={gameId} onContinue={() => setGameId(gameId + 1)} />
+    );
+}
 
-const App = () => {
+
+const App = (props) => {
     const [state, setAppState] = useState(getTurnData(authors));
+
     const handleClick = (selected) => {
         let isCorrect = state.author.books.some((book) => book === selected);
         isCorrect ? setAppState({ ...state, answerStatus: 'correct' }) : setAppState({ ...state, answerStatus: 'wrong' });
@@ -72,16 +80,66 @@ const App = () => {
         <AuthorQuiz books={state.books}
             author={state.author}
             answerStatus={state.answerStatus}
-            onClick={(val) => handleClick(val)} />
+            onClick={(val) => handleClick(val)}
+            onContinue={props.onContinue}
+        />
     );
 }
+
+const AddAuthorWrapper = withRouter((props) => {
+    const newAuthorData = {
+        name: '',
+        imageUrl: '',
+        books: [],
+        bookTemp: ''
+    };
+    const [authorData, setAuthorData] = useState(newAuthorData);
+
+    const handleAddAuthor = () => {
+        authors.push({
+            name: authorData.name,
+            imageUrl: authorData.imageUrl,
+            imageSource: 'Wikimedia Commons',
+            books: authorData.books
+        });
+        props.history.push('/');
+        console.log(authors);
+    };
+
+    const handleFieldChange = (event) => {
+        setAuthorData({
+            ...authorData,
+            [event.target.name]: event.target.value
+        });
+    }
+
+    const handleAddBook = () => {
+        setAuthorData({
+            ...authorData,
+            books: authorData.books.concat(authorData.bookTemp),
+            bookTemp: ''
+        });
+    }
+
+    return (
+        <AddAuthorForm
+            authorName={authorData.name}
+            imageUrl={authorData.imageUrl}
+            books={authorData.books}
+            bookTemp={authorData.bookTemp}
+            onAddAuthor={(author) => handleAddAuthor(author)}
+            onFieldChange={(event) => handleFieldChange(event)}
+            onAddBook={handleAddBook}
+        />
+    );
+})
 
 const AppRoutes = (props) => {
     return (
         <BrowserRouter>
             <>
-                <Route exact path='/' component={App} />
-                <Route path='/add' component={AddAuthorForm} />
+                <Route exact path='/' component={RepeatableApp} />
+                <Route path='/add' component={AddAuthorWrapper} />
             </>
         </BrowserRouter>
     );
