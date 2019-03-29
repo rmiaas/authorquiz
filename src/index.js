@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter, Route } from 'react-router-dom';
 import './index.css';
 import AuthorQuiz from './AuthorQuiz';
+import AddAuthorForm from './AddAuthorForm';
 import * as serviceWorker from './serviceWorker';
 import { shuffle, sample } from 'underscore';
 
@@ -74,8 +76,19 @@ const App = () => {
     );
 }
 
+const AppRoutes = (props) => {
+    return (
+        <BrowserRouter>
+            <>
+                <Route exact path='/' component={App} />
+                <Route path='/add' component={AddAuthorForm} />
+            </>
+        </BrowserRouter>
+    );
+}
+
 ReactDOM.render(
-    <App />,
+    <AppRoutes />,
     document.getElementById('root')
 );
 

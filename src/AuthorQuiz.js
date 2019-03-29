@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './bootstrap.min.css';
 import './App.css';
 
@@ -59,6 +60,16 @@ const Continue = (props) => {
   );
 }
 
+const AddAuthorLink = (props) => {
+  return (
+    <p>
+      <Link to='/add'>
+        Add an author
+      </Link>
+    </p>
+  );
+}
+
 const AuthorQuiz = (props) => {
   const handleClick = (title) => props.onClick(title);
   return (
@@ -66,6 +77,7 @@ const AuthorQuiz = (props) => {
       <Header />
       <Turn {...props} onClick={handleClick} />
       <Continue />
+      <AddAuthorLink />
       <Footer />
     </div>
   );
