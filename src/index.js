@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter, Route, withRouter } from 'react-router-dom';
+import { BrowserRouter, Route } from 'react-router-dom';
+import * as Redux from 'redux';
+import * as ReactRedux from 'react-redux';
 import './index.css';
 import AuthorQuiz from './AuthorQuiz';
 import AddAuthorForm from './AddAuthorForm';
@@ -58,95 +60,65 @@ const getTurnData = (authors) => {
         author: authors.find((author) => author.books.some((title) => title === answer)),
         answerStatus: 'none'
     }
-}
+};
 
-const RepeatableApp = () => {
-    const [gameId, setGameId] = useState(1);
-    return (
-        <App key={gameId} onContinue={() => setGameId(gameId + 1)} />
-    );
-}
+const newAuthorData = {
+    name: '',
+    imageUrl: '',
+    books: [],
+    bookTemp: ''
+};
 
-
-const App = (props) => {
-    const [state, setAppState] = useState(getTurnData(authors));
-
-    const handleClick = (selected) => {
-        let isCorrect = state.author.books.some((book) => book === selected);
-        isCorrect ? setAppState({ ...state, answerStatus: 'correct' }) : setAppState({ ...state, answerStatus: 'wrong' });
+const initalState = () => {
+    let randomTurnData = getTurnData(authors);
+    return {
+        authors: authors,
+        turnData: randomTurnData,
+        newAuthorData: newAuthorData,
+        gameId: 1
     }
+};
 
-    return (
-        <AuthorQuiz books={state.books}
-            author={state.author}
-            answerStatus={state.answerStatus}
-            onClick={(val) => handleClick(val)}
-            onContinue={props.onContinue}
-        />
-    );
-}
+const reducer = (state = initalState(), action) => {
+    switch (action.type) {
+        case 'ANSWER_SELECTED':
+            let isCorrect = state.turnData.author.books.some((book) => book === action.answer);
+            state.turnData.answerStatus = isCorrect ? 'correct' : 'wrong';
+            return { ...state };
+        case 'CONTINUE':
+            return Object.assign({}, state, {
+                turnData: getTurnData(state.authors),
+                gameId: state.gameId + 1
+            });
+        case 'ADD_AUTHOR':
+            return Object.assign({}, state, {
+                authors: state.authors.concat([{
+                    name: action.author.name,
+                    imageUrl: action.author.imageUrl,
+                    books: action.author.books,
+                    imageSource: 'Wikimedia Commons'
+                }])
+            });
+        default:
+            return { ...state };
 
-const AddAuthorWrapper = withRouter((props) => {
-    const newAuthorData = {
-        name: '',
-        imageUrl: '',
-        books: [],
-        bookTemp: ''
-    };
-    const [authorData, setAuthorData] = useState(newAuthorData);
-
-    const handleAddAuthor = () => {
-        authors.push({
-            name: authorData.name,
-            imageUrl: authorData.imageUrl,
-            imageSource: 'Wikimedia Commons',
-            books: authorData.books
-        });
-        props.history.push('/');
-        console.log(authors);
-    };
-
-    const handleFieldChange = (event) => {
-        setAuthorData({
-            ...authorData,
-            [event.target.name]: event.target.value
-        });
     }
+};
 
-    const handleAddBook = () => {
-        setAuthorData({
-            ...authorData,
-            books: authorData.books.concat(authorData.bookTemp),
-            bookTemp: ''
-        });
-    }
-
-    return (
-        <AddAuthorForm
-            authorName={authorData.name}
-            imageUrl={authorData.imageUrl}
-            books={authorData.books}
-            bookTemp={authorData.bookTemp}
-            onAddAuthor={(author) => handleAddAuthor(author)}
-            onFieldChange={(event) => handleFieldChange(event)}
-            onAddBook={handleAddBook}
-        />
-    );
-})
-
-const AppRoutes = (props) => {
-    return (
-        <BrowserRouter>
-            <>
-                <Route exact path='/' component={RepeatableApp} />
-                <Route path='/add' component={AddAuthorWrapper} />
-            </>
-        </BrowserRouter>
-    );
-}
+const authorStore = Redux.createStore(
+    reducer,
+    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+);
 
 ReactDOM.render(
-    <AppRoutes />,
+    <BrowserRouter>
+        <ReactRedux.Provider store={authorStore}>
+            <React.Fragment>
+                <Route exact path='/' component={AuthorQuiz} />
+                <Route path='/add' component={AddAuthorForm} />
+            </React.Fragment>
+        </ReactRedux.Provider>
+    </BrowserRouter>,
     document.getElementById('root')
 );
 

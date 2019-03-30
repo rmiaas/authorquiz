@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { connect } from 'react-redux';
 import './bootstrap.min.css';
 import './App.css';
 
@@ -9,7 +10,7 @@ const highlightColor = {
   'correct': 'green'
 };
 
-const Header = (props) => {
+const Header = () => {
   return (
     <div className='row'>
       <div className='jumbotron col-10 offset-1'>
@@ -20,7 +21,7 @@ const Header = (props) => {
   );
 }
 
-const Footer = (props) => {
+const Footer = () => {
   return (
     <div id='footer' className='row'>
       <div className='col-8 offset-4'>
@@ -32,46 +33,46 @@ const Footer = (props) => {
   )
 }
 
-const Book = (props) => {
+const Book = ({ title, onClick }) => {
   return (
-    <div className='answer' onClick={() => props.onClick(props.title)}>
-      <h4>{props.title}</h4>
+    <div className='answer' onClick={() => onClick(title)}>
+      <h4>{title}</h4>
     </div>
   )
 }
 
-const Turn = (props) => {
+const Turn = ({ books, author, answerStatus, onAnswerSelected }) => {
   return (
-    <div className='row turn' style={{ backgroundColor: highlightColor[props.answerStatus] }}>
+    <div className='row turn' style={{ backgroundColor: highlightColor[answerStatus] }}>
       <div className='col-4 offset-1'>
-        <img src={props.author.imageUrl} className='authorimage' alt='Author' />
+        <img src={author.imageUrl} className='authorimage' alt='Author' />
       </div>
       <div className='col-6'>
-        {props.books.map((book) => <Book title={book} key={book} onClick={props.onClick} />)}
+        {books.map((book) => <Book title={book} key={book} onClick={onAnswerSelected} />)}
       </div>
     </div>
   );
 }
 
-const ContinueButton = (props) => {
+const ContinueButton = ({ onContinue }) => {
   return (
     <div className='col-11'>
-      <button className='btn btn-primary btn-lg float-right' onClick={props.onContinue}>
+      <button className='btn btn-primary btn-lg float-right' onClick={onContinue}>
         Continue
       </button>
     </div>
   );
 }
 
-const Continue = (props) => {
+const Continue = ({ show, onContinue }) => {
   return (
     <div className='row continue'>
-      {props.show ? <ContinueButton onContinue={props.onContinue} /> : null}
+      {show ? <ContinueButton onContinue={onContinue} /> : null}
     </div>
   );
 }
 
-const AddAuthorLink = (props) => {
+const AddAuthorLink = () => {
   return (
     <div className='row'>
       <div className='col-4 offset-1'>
@@ -83,17 +84,37 @@ const AddAuthorLink = (props) => {
   );
 }
 
-const AuthorQuiz = (props) => {
-  const handleClick = (title) => props.onClick(title);
-  return (
-    <div className='container-fluid'>
-      <Header />
-      <Turn {...props} onClick={handleClick} />
-      <Continue show={props.answerStatus === 'correct'} onContinue={props.onContinue} />
-      <AddAuthorLink />
-      <Footer />
-    </div>
-  );
-}
+const mapStateToProps = (state) => {
+  return {
+    turnData: state.turnData,
+    answerStatus: state.turnData.answerStatus,
+    gameId: state.gameId
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onAnswerSelected: (answer) => {
+      dispatch({ type: 'ANSWER_SELECTED', answer });
+    },
+    onContinue: () => {
+      dispatch({ type: 'CONTINUE' });
+    }
+  };
+};
+
+const AuthorQuiz = connect(mapStateToProps, mapDispatchToProps)(
+  ({ turnData, answerStatus, gameId, onAnswerSelected, onContinue }) => {
+    return (
+      <div className='container-fluid'>
+        <Header />
+        <Turn {...turnData} answerStatus={answerStatus} key={gameId} onAnswerSelected={onAnswerSelected} />
+        <Continue show={answerStatus === 'correct'} onContinue={onContinue} />
+        <AddAuthorLink />
+        <Footer />
+      </div>
+    );
+  }
+);
 
 export default AuthorQuiz;
